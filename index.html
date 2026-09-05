@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>חילוק ארוך של אמיליה</title>
+<style>
+  :root{
+    --bg:#f2f8fb; --card:#ffffff; --ink:#2c3540; --muted:#7a8794;
+    --teal:#2eb8a0; --teal-d:#1f9a85; --sky:#4aa8d8; --sky-d:#348fc0;
+    --sun:#ffc75a; --bad:#ef5f6b; --line:#e0ebef;
+    --mint:#2fbf9b;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;height:100%}
+  body{
+    background:linear-gradient(180deg,#e8f4f8 0%,var(--bg) 40%);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Rubik,Arial,sans-serif;
+    display:flex; flex-direction:column; min-height:100%;
+  }
+  .wrap{flex:1; display:flex; flex-direction:column; max-width:390px; margin:0 auto; width:100%; padding:14px 14px 20px}
+  .top{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px}
+  .hello{font-size:16px; font-weight:700; line-height:1.35}
+  .hello span{color:var(--sky-d)}
+  .ghost{
+    background:#fff; border:1px solid var(--line); color:var(--muted);
+    border-radius:999px; padding:7px 13px; font-size:13px; font-weight:600; cursor:pointer;
+    flex-shrink:0;
+  }
+  .stats{display:flex; gap:7px; margin:8px 0 4px}
+  .chip{
+    flex:1; background:var(--card); border:1px solid var(--line); border-radius:16px;
+    padding:9px 4px; text-align:center;
+  }
+  .chip b{display:block; font-size:18px; line-height:1.2}
+  .chip small{color:var(--muted); font-size:11px}
+  .sync{text-align:center; color:var(--muted); font-size:11px; min-height:16px; margin:0 0 8px; font-weight:500}
+  .level-bar{
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    margin-bottom:10px; font-size:12px; font-weight:700; color:var(--sky-d);
+  }
+  .level-bar .dot{
+    width:10px; height:10px; border-radius:50%; background:#d0e4ee;
+  }
+  .level-bar .dot.on{background:var(--teal)}
+  .level-bar .dot.cur{background:var(--sky); box-shadow:0 0 0 3px rgba(74,168,216,.25)}
+  .qcard{
+    background:var(--card); border:1px solid var(--line); border-radius:26px;
+    padding:18px 14px; text-align:center; box-shadow:0 6px 18px rgba(40,80,100,.06);
+  }
+  .qlabel{font-size:13px; color:var(--muted); font-weight:600; margin-bottom:4px}
+  .q{font-size:clamp(34px,12vw,52px); font-weight:800; letter-spacing:1px; direction:ltr}
+  .fields{display:flex; gap:10px; justify-content:center; margin-top:14px; flex-wrap:wrap}
+  .field{display:flex; flex-direction:column; align-items:center; gap:4px}
+  .field label{font-size:12px; font-weight:700; color:var(--muted)}
+  .ans{
+    width:110px; height:56px; border-radius:16px;
+    border:2px dashed var(--line); display:flex; align-items:center; justify-content:center;
+    font-size:30px; font-weight:800; direction:ltr; background:#f7fcfe;
+  }
+  .ans.active{border-color:var(--sky); border-style:solid; box-shadow:0 0 0 3px rgba(74,168,216,.15)}
+  .ans.filled{border-style:solid; border-color:var(--sky)}
+  .ans.ok{border-color:var(--mint); background:#eefaf6; color:var(--mint)}
+  .ans.no{border-color:var(--bad); background:#fdeef0; color:var(--bad)}
+  .msg{min-height:26px; margin-top:10px; font-size:15px; font-weight:700}
+  .msg.ok{color:var(--mint)} .msg.no{color:var(--bad)}
+  .msg small{display:block; color:var(--muted); font-weight:600; font-size:13px; margin-top:2px}
+  .hint{
+    margin-top:10px; font-size:12px; color:var(--muted); direction:ltr;
+    font-family:ui-monospace,Menlo,Consolas,monospace; line-height:1.35;
+    background:#f0f7fa; border-radius:12px; padding:8px 10px; display:none; text-align:left;
+  }
+  .hint.show{display:block}
+  .pad{display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin-top:14px; direction:ltr}
+  .key{
+    background:var(--card); border:1px solid var(--line); border-radius:18px;
+    padding:15px 0; font-size:26px; font-weight:700; cursor:pointer; user-select:none;
+  }
+  .key:active{transform:translateY(1px); background:#eef5f8}
+  .key.go{background:var(--teal); border-color:var(--teal); color:#fff; font-size:18px}
+  .key.del{background:#eef6fb; border-color:#c5dff0; color:var(--sky-d); font-size:20px}
+  .send{
+    margin-top:14px; width:100%; padding:14px; border-radius:18px; border:none;
+    background:var(--sky); color:#fff; font-size:16px; font-weight:700; cursor:pointer;
+  }
+  .send:active{background:var(--sky-d)}
+  .copy{margin-top:8px; width:100%; padding:11px; border-radius:16px; border:1px solid var(--line); background:#fff; color:var(--muted); font-size:13px; font-weight:600; cursor:pointer}
+  .hidden{display:none !important}
+  h2{font-size:19px; margin:4px 0 12px}
+  h3{font-size:15px; margin:18px 0 8px; color:var(--muted)}
+  .panel{background:var(--card); border:1px solid var(--line); border-radius:20px; padding:14px}
+  table{width:100%; border-collapse:collapse; font-size:13px}
+  th,td{padding:7px 5px; text-align:right; border-bottom:1px solid var(--line)}
+  th{color:var(--muted); font-weight:600; font-size:12px}
+  .hard{display:flex; flex-wrap:wrap; gap:7px; margin-top:4px}
+  .hard span{background:#e8f4fb; color:#1a6a90; border-radius:10px; padding:6px 10px; font-size:13px; font-weight:700; direction:ltr}
+  .empty{color:var(--muted); font-size:14px; line-height:1.6; text-align:center; padding:12px 4px}
+  .danger{margin-top:16px; width:100%; padding:12px; border-radius:16px; border:1px solid #c5dff0; background:#fff; color:var(--bad); font-weight:700; font-size:14px; cursor:pointer}
+  .pin{width:100%; padding:14px; font-size:22px; text-align:center; letter-spacing:8px; border-radius:16px; border:1px solid var(--line); direction:ltr}
+  .note{color:var(--muted); font-size:12px; margin-top:8px; text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div id="practice">
+    <div class="top">
+      <div class="hello">חילוק ארוך של <span>אמיליה</span></div>
+      <button class="ghost" id="btnParent">הורים</button>
+    </div>
+
+    <div class="stats">
+      <div class="chip"><b id="sCount">0</b><small>תרגילים</small></div>
+      <div class="chip"><b id="sStreak">0</b><small>ברצף</small></div>
+      <div class="chip"><b id="sAcc">—</b><small>הצלחה</small></div>
+      <div class="chip"><b id="sLevel">1</b><small>רמה</small></div>
+    </div>
+    <div class="sync" id="syncStatus"></div>
+    <div class="level-bar" id="levelBar" aria-hidden="true"></div>
+
+    <div class="qcard">
+      <div class="qlabel" id="qLabel">מה התוצאה?</div>
+      <div class="q" id="qText">— ÷ —</div>
+      <div class="fields">
+        <div class="field">
+          <label>התוצאה</label>
+          <div class="ans active" id="ansQ">?</div>
+        </div>
+        <div class="field hidden" id="remField">
+          <label>שארית</label>
+          <div class="ans" id="ansR">?</div>
+        </div>
+      </div>
+      <div class="msg" id="msg"></div>
+      <div class="hint" id="hint"></div>
+    </div>
+
+    <div class="pad" id="pad"></div>
+    <button class="send" id="btnReport">שלחי דוח לאמא</button>
+    <button class="copy" id="btnCopy">העתיקי את הדוח</button>
+  </div>
+
+  <div id="pinScreen" class="hidden">
+    <div class="top">
+      <div class="hello">מסך הורים</div>
+      <button class="ghost" id="btnPinBack">חזרה</button>
+    </div>
+    <div class="panel">
+      <h2>הקלידו קוד</h2>
+      <input class="pin" id="pinInput" type="tel" inputmode="numeric" maxlength="4" placeholder="••••" style="">
+      <div class="note" id="pinNote">ארבע ספרות</div>
+    </div>
+  </div>
+
+  <div id="parent" class="hidden">
+    <div class="top">
+      <div class="hello">ההתקדמות של אמיליה</div>
+      <button class="ghost" id="btnBack">חזרה לתרגול</button>
+    </div>
+    <div id="parentBody"></div>
+    <button class="danger" id="btnReset">איפוס כל הנתונים</button>
+  </div>
+
+</div>
+<script>
+"use strict";
+/* ---------------------------------------------------------------
+   חילוק ארוך של אמיליה — localStorage + Supabase (kefel_state).
+   Progressive L1–L5, adaptive requeue, quotient (+ remainder).
+----------------------------------------------------------------*/
+
+var CLOUD = {
+  url: "https://nrxhjzmmmzqjytmdgzjg.supabase.co",
+  anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5yeGhqem1tbXpxanl0bWRnempnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1NDg3MTAsImV4cCI6MjEwNDEyNDcxMH0.5KYX69e1AyXqtHHRejFarK-r1yoXdmlpav2Oazb2WIs",
+  rowId: "emilia-hiluk"
+};
+
+var PIN = "2604", IDLE_MS = 3 * 60 * 1000, KEY = "hiluk_amelia_v1";
+var MAX_LEVEL = 5;
+var mem = null;
+var pushTimer = null;
+var syncEl = null;
+
+function cloudConfigured(){
+  return !!(CLOUD.url && CLOUD.anonKey && CLOUD.url.indexOf("https://") === 0 && CLOUD.anonKey.length > 20);
+}
+
+function setSync(text){
+  if(!syncEl) syncEl = document.getElementById("syncStatus");
+  if(syncEl) syncEl.textContent = text || "";
+}
+
+function blank(){
+  return { facts:{}, sessions:[], answers:0, level:1, recent:[], levelCorrect:0, levelSeen:0 };
+}
+function load(){
+  try{
+    var raw = localStorage.getItem(KEY);
+    return raw ? JSON.parse(raw) : blank();
+  }catch(e){ return mem || (mem = blank()); }
+}
+function saveLocal(){
+  try{ localStorage.setItem(KEY, JSON.stringify(db)); }catch(e){ mem = db; }
+}
+function save(opts){
+  opts = opts || {};
+  saveLocal();
+  if(opts.immediate){
+    if(pushTimer){ clearTimeout(pushTimer); pushTimer = null; }
+    cloudPush();
+  }else{
+    schedulePush();
+  }
+}
+function schedulePush(){
+  if(pushTimer) clearTimeout(pushTimer);
+  pushTimer = setTimeout(function(){
+    pushTimer = null;
+    cloudPush();
+  }, 800);
+}
+
+function cloudHeaders(){
+  return {
+    "apikey": CLOUD.anonKey,
+    "Authorization": "Bearer " + CLOUD.anonKey,
+    "Content-Type": "application/json"
+  };
+}
+
+function cloudPull(){
+  if(!cloudConfigured()){
+    setSync("");
+    return Promise.resolve(false);
+  }
+  setSync("שומר בענן…");
+  var url = CLOUD.url + "/rest/v1/kefel_state?id=eq." + encodeURIComponent(CLOUD.rowId) + "&select=data,updated_at";
+  return fetch(url, {
+    method: "GET",
+    headers: cloudHeaders()
+  }).then(function(res){
+    if(!res.ok) throw new Error("pull " + res.status);
+    return res.json();
+  }).then(function(rows){
+    function score(d){
+      if(!d || typeof d !== "object") return 0;
+      var answers = typeof d.answers === "number" ? d.answers : 0;
+      var sessions = d.sessions || [];
+      var withQ = 0;
+      for(var i = 0; i < sessions.length; i++){
+        if(sessions[i] && sessions[i].q > 0) withQ++;
+      }
+      return answers * 1000 + withQ;
+    }
+    var cloudData = null;
+    if(rows && rows.length && rows[0] && rows[0].data){
+      var data = rows[0].data;
+      if(typeof data === "string"){
+        try{ data = JSON.parse(data); }catch(e){ data = null; }
+      }
+      if(data && typeof data === "object") cloudData = data;
+    }
+    var localScore = score(db);
+    var cloudScore = score(cloudData);
+    if(cloudScore > localScore){
+      db = cloudData;
+      normalizeDb();
+      saveLocal();
+      setSync("מסונכרן");
+      return true;
+    } else if(localScore > 0 && localScore >= cloudScore){
+      return cloudPush();
+    } else {
+      setSync("מסונכרן");
+      return false;
+    }
+  }).catch(function(){
+    setSync("אין רשת — נשמר במכשיר");
+    return false;
+  });
+}
+
+function cloudPush(){
+  if(!cloudConfigured()) return Promise.resolve(false);
+  setSync("שומר בענן…");
+  var url = CLOUD.url + "/rest/v1/kefel_state?on_conflict=id";
+  var body = {
+    id: CLOUD.rowId,
+    data: db,
+    updated_at: new Date().toISOString()
+  };
+  var headers = cloudHeaders();
+  headers["Prefer"] = "resolution=merge-duplicates,return=minimal";
+  return fetch(url, {
+    method: "POST",
+    headers: headers,
+    body: JSON.stringify(body)
+  }).then(function(res){
+    if(!res.ok) throw new Error("push " + res.status);
+    setSync("מסונכרן");
+    return true;
+  }).catch(function(){
+    setSync("אין רשת — נשמר במכשיר");
+    return false;
+  });
+}
+
+function normalizeDb(){
+  if(!db.facts) db.facts = {};
+  if(!db.sessions) db.sessions = [];
+  if(typeof db.answers !== "number") db.answers = 0;
+  if(typeof db.level !== "number" || db.level < 1) db.level = 1;
+  if(db.level > MAX_LEVEL) db.level = MAX_LEVEL;
+  if(!Array.isArray(db.recent)) db.recent = [];
+  if(typeof db.levelCorrect !== "number") db.levelCorrect = 0;
+  if(typeof db.levelSeen !== "number") db.levelSeen = 0;
+}
+
+var db = load();
+normalizeDb();
+
+function fkey(div, dvs){ return div + "/" + dvs; }
+function fact(div, dvs){
+  var k = fkey(div, dvs);
+  if(!db.facts[k]) db.facts[k] = { seen:0, correct:0, wrong:0, streak:0, lastWrongAt:-9999, level:0 };
+  return db.facts[k];
+}
+function parseKey(k){
+  var p = k.split("/");
+  return [parseInt(p[0],10), parseInt(p[1],10)];
+}
+
+/* ---------------- sessions ---------------- */
+var session = null;
+function currentSession(){
+  var last = db.sessions[db.sessions.length-1];
+  var now = Date.now();
+  if(last && (now - last.last) < IDLE_MS){ session = last; return session; }
+  session = { start: now, last: now, ms: 0, q: 0, correct: 0, best: 0, level: db.level };
+  db.sessions.push(session);
+  save();
+  return session;
+}
+function touchSession(){
+  var now = Date.now(), s = currentSession();
+  var dt = now - s.last;
+  if(dt > 0 && dt < 60000) s.ms += dt;
+  s.last = now;
+}
+
+/* ---------------- problem generation ---------------- */
+function randInt(a, b){ return a + Math.floor(Math.random() * (b - a + 1)); }
+
+function makeProblem(level){
+  var div, dvs, q, r, exact;
+  level = Math.max(1, Math.min(MAX_LEVEL, level|0));
+
+  if(level === 1){
+    /* 2-digit ÷ 1-digit, exact, divisor 2-9, sensible quotient */
+    dvs = randInt(2, 9);
+    q = randInt(2, Math.min(12, Math.floor(99 / dvs)));
+    if(q < 2) q = 2;
+    div = dvs * q;
+    if(div < 10){ div = dvs * randInt(5, 9); q = div / dvs; }
+    if(div > 99){ q = Math.floor(99 / dvs); div = dvs * q; }
+    r = 0; exact = true;
+  } else if(level === 2){
+    /* 2-digit ÷ 1-digit WITH remainder */
+    dvs = randInt(2, 9);
+    q = randInt(2, Math.min(11, Math.floor(98 / dvs)));
+    r = randInt(1, dvs - 1);
+    div = dvs * q + r;
+    if(div < 10){ q = randInt(3, 8); r = randInt(1, dvs - 1); div = dvs * q + r; }
+    if(div > 99){ q = Math.floor((99 - (dvs - 1)) / dvs); r = randInt(1, dvs - 1); div = dvs * q + r; }
+    exact = false;
+  } else if(level === 3){
+    /* 3-digit ÷ 1-digit, exact */
+    dvs = randInt(2, 9);
+    q = randInt(12, Math.min(99, Math.floor(999 / dvs)));
+    div = dvs * q;
+    if(div < 100){ q = randInt(25, 80); div = dvs * q; }
+    if(div > 999){ q = Math.floor(999 / dvs); div = dvs * q; }
+    r = 0; exact = true;
+  } else if(level === 4){
+    /* 3-digit ÷ 1-digit with remainder */
+    dvs = randInt(2, 9);
+    q = randInt(12, Math.min(98, Math.floor(998 / dvs)));
+    r = randInt(1, dvs - 1);
+    div = dvs * q + r;
+    if(div < 100){ q = randInt(20, 70); r = randInt(1, dvs - 1); div = dvs * q + r; }
+    if(div > 999){ q = Math.floor((999 - (dvs - 1)) / dvs); r = randInt(1, dvs - 1); div = dvs * q + r; }
+    exact = false;
+  } else {
+    /* L5: 3-digit ÷ 2-digit (11–19), exact or remainder */
+    dvs = randInt(11, 19);
+    exact = Math.random() < 0.45;
+    if(exact){
+      q = randInt(6, Math.min(45, Math.floor(999 / dvs)));
+      div = dvs * q;
+      if(div < 100){ q = randInt(8, 20); div = dvs * q; }
+      r = 0;
+    } else {
+      q = randInt(5, Math.min(40, Math.floor(980 / dvs)));
+      r = randInt(1, dvs - 1);
+      div = dvs * q + r;
+      if(div < 100){ q = randInt(8, 18); r = randInt(1, dvs - 1); div = dvs * q + r; }
+      if(div > 999){ q = Math.floor((999 - (dvs - 1)) / dvs); r = randInt(1, dvs - 1); div = dvs * q + r; }
+    }
+  }
+
+  return {
+    div: div,
+    dvs: dvs,
+    q: q,
+    r: r,
+    exact: exact,
+    hasRem: r > 0,
+    level: level,
+    key: fkey(div, dvs)
+  };
+}
+
+function weightOf(prob){
+  var f = fact(prob.div, prob.dvs);
+  if(f.seen === 0) return 3;
+  var wrongRate = f.wrong / f.seen;
+  var w = 1 + 6 * wrongRate;
+  if(db.answers - f.lastWrongAt <= 12) w += 5;
+  if(f.streak >= 3) w = Math.max(0.35, w * 0.35);
+  return w;
+}
+
+function pickLevelForNext(){
+  var L = db.level;
+  /* ~25% chance of easier review when above L1 */
+  if(L > 1 && Math.random() < 0.28){
+    return randInt(1, L - 1);
+  }
+  return L;
+}
+
+function maybeUnlock(){
+  if(db.level >= MAX_LEVEL) return;
+  var recent = db.recent || [];
+  var windowN = Math.min(12, recent.length);
+  if(windowN < 8) return;
+  var slice = recent.slice(-windowN);
+  var ok = 0;
+  for(var i = 0; i < slice.length; i++) if(slice[i]) ok++;
+  var acc = ok / slice.length;
+  if(db.levelCorrect >= 8 && acc >= 0.8){
+    db.level++;
+    db.levelCorrect = 0;
+    db.levelSeen = 0;
+    db.recent = [];
+  }
+}
+
+var cur = null, prevKey = "";
+var typedQ = "", typedR = "", focusField = "q"; /* q | r */
+var locked = false;
+var streakNow = 0;
+
+function nextQuestion(){
+  var tries = 0, pick = null, pool = [], total = 0;
+  var targetLevel = pickLevelForNext();
+
+  /* Build a small weighted pool of candidate problems */
+  for(var n = 0; n < 18; n++){
+    var p = makeProblem(targetLevel);
+    if(p.key === prevKey) continue;
+    var w = weightOf(p);
+    /* Boost wrong types / recent misses via fact table */
+    pool.push({ p: p, w: w });
+    total += w;
+  }
+  /* Also requeue from known weak facts at or below current level */
+  for(var k in db.facts){
+    var f = db.facts[k];
+    if(!f || f.wrong < 1) continue;
+    if(db.answers - f.lastWrongAt > 30 && f.streak >= 2) continue;
+    var parts = parseKey(k);
+    if(!parts[0] || !parts[1]) continue;
+    var qq = Math.floor(parts[0] / parts[1]);
+    var rr = parts[0] % parts[1];
+    var lvlGuess = estimateLevel(parts[0], parts[1], rr);
+    if(lvlGuess > db.level) continue;
+    var wp = {
+      div: parts[0], dvs: parts[1], q: qq, r: rr,
+      exact: rr === 0, hasRem: rr > 0, level: lvlGuess, key: k
+    };
+    if(wp.key === prevKey) continue;
+    var ww = weightOf(wp) + 4;
+    pool.push({ p: wp, w: ww });
+    total += ww;
+  }
+
+  if(!pool.length){
+    pick = makeProblem(targetLevel);
+  } else {
+    var r = Math.random() * total, acc = 0;
+    pick = pool[pool.length - 1].p;
+    for(var i = 0; i < pool.length; i++){
+      acc += pool[i].w;
+      if(r <= acc){ pick = pool[i].p; break; }
+    }
+  }
+
+  cur = pick;
+  prevKey = cur.key;
+  typedQ = ""; typedR = "";
+  focusField = "q";
+  locked = false;
+  render();
+}
+
+function estimateLevel(div, dvs, rem){
+  if(dvs >= 11) return 5;
+  if(div >= 100) return rem > 0 ? 4 : 3;
+  return rem > 0 ? 2 : 1;
+}
+
+/* ---------------- practice UI ---------------- */
+var qText = document.getElementById("qText");
+var qLabel = document.getElementById("qLabel");
+var ansQ = document.getElementById("ansQ");
+var ansR = document.getElementById("ansR");
+var remField = document.getElementById("remField");
+var msg = document.getElementById("msg");
+var hint = document.getElementById("hint");
+
+function renderLevelBar(){
+  var el = document.getElementById("levelBar");
+  var html = "";
+  for(var i = 1; i <= MAX_LEVEL; i++){
+    var cls = "dot";
+    if(i < db.level) cls += " on";
+    if(i === db.level) cls += " cur";
+    html += '<span class="' + cls + '" title="רמה ' + i + '"></span>';
+  }
+  html += '<span style="margin-right:6px">רמה ' + db.level + '</span>';
+  el.innerHTML = html;
+  document.getElementById("sLevel").textContent = String(db.level);
+}
+
+function setAnsDisplay(el, val, extraClass){
+  el.textContent = val === "" ? "?" : val;
+  var cls = "ans";
+  if(extraClass) cls += " " + extraClass;
+  else if(val) cls += " filled";
+  el.className = cls;
+}
+
+function render(){
+  if(!cur) return;
+  qText.textContent = cur.div + " ÷ " + cur.dvs;
+  if(cur.hasRem){
+    qLabel.textContent = "מה התוצאה ומה השארית?";
+    remField.classList.remove("hidden");
+  } else {
+    qLabel.textContent = "מה התוצאה?";
+    remField.classList.add("hidden");
+  }
+  var qCls = (focusField === "q" ? "active" : "") + (typedQ ? " filled" : "");
+  var rCls = (focusField === "r" ? "active" : "") + (typedR ? " filled" : "");
+  ansQ.textContent = typedQ === "" ? "?" : typedQ;
+  ansQ.className = "ans" + (qCls ? " " + qCls.trim() : "");
+  ansR.textContent = typedR === "" ? "?" : typedR;
+  ansR.className = "ans" + (rCls ? " " + rCls.trim() : "");
+  msg.textContent = ""; msg.className = "msg";
+  hint.className = "hint"; hint.textContent = "";
+  var s = currentSession();
+  document.getElementById("sCount").textContent = s.q;
+  document.getElementById("sStreak").textContent = streakNow;
+  document.getElementById("sAcc").textContent = s.q ? Math.round(100 * s.correct / s.q) + "%" : "—";
+  renderLevelBar();
+}
+
+ansQ.addEventListener("click", function(){ if(!locked){ focusField = "q"; renderFocusOnly(); } });
+ansR.addEventListener("click", function(){ if(!locked && cur && cur.hasRem){ focusField = "r"; renderFocusOnly(); } });
+
+function renderFocusOnly(){
+  ansQ.className = "ans" + (focusField === "q" ? " active" : "") + (typedQ ? " filled" : "");
+  ansR.className = "ans" + (focusField === "r" ? " active" : "") + (typedR ? " filled" : "");
+  ansQ.textContent = typedQ === "" ? "?" : typedQ;
+  ansR.textContent = typedR === "" ? "?" : typedR;
+}
+
+var PRAISE = ["מדויק!","נכון מאוד!","כל הכבוד!","יפה!","בדיוק!","אלופה!","וואו!"];
+
+function showWorkedHint(){
+  /* Tiny long-division style hint */
+  var lines = [];
+  lines.push(cur.dvs + " )" + cur.div);
+  lines.push("   " + (cur.q * cur.dvs));
+  if(cur.r > 0) lines.push("   שארית " + cur.r);
+  else lines.push("   (בלי שארית)");
+  hint.textContent = lines.join("\n");
+  hint.className = "hint show";
+}
+
+function submit(){
+  if(locked || !cur) return;
+  if(typedQ === "") return;
+  if(cur.hasRem && typedR === ""){
+    focusField = "r";
+    renderFocusOnly();
+    msg.className = "msg";
+    msg.textContent = "עכשיו כתבי את השארית";
+    return;
+  }
+
+  var gQ = parseInt(typedQ, 10);
+  var gR = cur.hasRem ? parseInt(typedR, 10) : 0;
+  if(isNaN(gQ) || (cur.hasRem && isNaN(gR))) return;
+
+  var f = fact(cur.div, cur.dvs);
+  f.level = cur.level;
+  var s = currentSession();
+  touchSession();
+  f.seen++; s.q++; db.answers++;
+  db.levelSeen++;
+
+  var ok = (gQ === cur.q) && ((!cur.hasRem && gR === 0) || (cur.hasRem && gR === cur.r));
+
+  db.recent.push(ok ? 1 : 0);
+  if(db.recent.length > 40) db.recent = db.recent.slice(-40);
+
+  if(ok){
+    f.correct++; f.streak++;
+    s.correct++; streakNow++;
+    if(streakNow > s.best) s.best = streakNow;
+    if(cur.level === db.level) db.levelCorrect++;
+    ansQ.className = "ans ok";
+    if(cur.hasRem) ansR.className = "ans ok";
+    msg.className = "msg ok";
+    var praise = PRAISE[Math.floor(Math.random() * PRAISE.length)];
+    maybeUnlock();
+    if(db.levelCorrect === 0 && db.level > 1 && db.recent.length === 0){
+      msg.textContent = praise + " עלית לרמה " + db.level + "!";
+    } else {
+      msg.textContent = praise;
+    }
+    save({ immediate: true });
+    locked = true;
+    renderLevelBar();
+    document.getElementById("sCount").textContent = s.q;
+    document.getElementById("sStreak").textContent = streakNow;
+    document.getElementById("sAcc").textContent = Math.round(100 * s.correct / s.q) + "%";
+    setTimeout(function(){ locked = false; nextQuestion(); }, 750);
+  } else {
+    f.wrong++; f.streak = 0; f.lastWrongAt = db.answers;
+    streakNow = 0;
+    ansQ.className = "ans no";
+    if(cur.hasRem) ansR.className = "ans no";
+    msg.className = "msg no";
+    var correctLine = cur.hasRem
+      ? (cur.div + " ÷ " + cur.dvs + " = " + cur.q + " שארית " + cur.r)
+      : (cur.div + " ÷ " + cur.dvs + " = " + cur.q);
+    msg.innerHTML = "כמעט! " + correctLine +
+      "<small>הקישי כדי להמשיך — נחזור לתרגיל דומה עוד מעט</small>";
+    showWorkedHint();
+    save({ immediate: true });
+    locked = true;
+    document.getElementById("sCount").textContent = s.q;
+    document.getElementById("sStreak").textContent = streakNow;
+    document.getElementById("sAcc").textContent = Math.round(100 * s.correct / s.q) + "%";
+    var cont = function(){
+      document.removeEventListener("click", cont);
+      document.removeEventListener("keydown", contKey);
+      locked = false; nextQuestion();
+    };
+    var contKey = function(e){ if(e.key === "Enter" || e.key === " ") cont(); };
+    setTimeout(function(){
+      document.addEventListener("click", cont);
+      document.addEventListener("keydown", contKey);
+    }, 250);
+  }
+}
+
+function typeDigit(d){
+  if(locked) return;
+  if(focusField === "q"){
+    if(typedQ.length < 3) typedQ += d;
+  } else {
+    if(typedR.length < 2) typedR += d;
+  }
+  renderFocusOnly();
+}
+function doDelete(){
+  if(locked) return;
+  if(focusField === "q") typedQ = typedQ.slice(0, -1);
+  else typedR = typedR.slice(0, -1);
+  renderFocusOnly();
+}
+
+var pad = document.getElementById("pad");
+["1","2","3","4","5","6","7","8","9","מחק","0","בדקי"].forEach(function(lab){
+  var b = document.createElement("button");
+  b.className = "key" + (lab === "בדקי" ? " go" : "") + (lab === "מחק" ? " del" : "");
+  b.textContent = lab;
+  b.addEventListener("click", function(){
+    if(locked) return;
+    if(lab === "מחק"){ doDelete(); }
+    else if(lab === "בדקי"){ submit(); }
+    else { typeDigit(lab); }
+  });
+  pad.appendChild(b);
+});
+
+document.addEventListener("keydown", function(e){
+  if(!document.getElementById("practice").classList.contains("hidden")){
+    if(locked) return;
+    if(/^[0-9]$/.test(e.key)){ typeDigit(e.key); }
+    else if(e.key === "Backspace"){ doDelete(); }
+    else if(e.key === "Enter"){ submit(); }
+    else if(e.key === "Tab" && cur && cur.hasRem){
+      e.preventDefault();
+      focusField = focusField === "q" ? "r" : "q";
+      renderFocusOnly();
+    }
+  }
+});
+
+/* ---------------- helpers ---------------- */
+function pad2(n){ return (n < 10 ? "0" : "") + n; }
+function fmtDate(ts){
+  var d = new Date(ts);
+  return pad2(d.getDate()) + "/" + pad2(d.getMonth() + 1) + "/" + d.getFullYear();
+}
+function fmtTime(ts){
+  var d = new Date(ts);
+  return pad2(d.getHours()) + ":" + pad2(d.getMinutes());
+}
+function fmtDur(ms){
+  var m = Math.round(ms / 60000);
+  if(m < 1) return "פחות מדקה";
+  if(m < 60) return m + " דק׳";
+  return Math.floor(m / 60) + " שע׳ " + (m % 60) + " דק׳";
+}
+function hardest(n){
+  var arr = [];
+  for(var k in db.facts){
+    var f = db.facts[k];
+    if(f.wrong > 0) arr.push({ k: k, wrong: f.wrong, seen: f.seen, correct: f.correct });
+  }
+  arr.sort(function(x, y){
+    if(y.wrong !== x.wrong) return y.wrong - x.wrong;
+    return (x.correct / x.seen) - (y.correct / y.seen);
+  });
+  return arr.slice(0, n);
+}
+
+/* ---------------- WhatsApp report ---------------- */
+function reportText(){
+  var s = currentSession();
+  if(!s.q) return null;
+  var lines = [];
+  lines.push("דוח תרגול חילוק ארוך — אמיליה");
+  lines.push(fmtDate(s.start) + " בשעה " + fmtTime(s.start));
+  lines.push("רמה נוכחית: " + db.level);
+  lines.push("זמן תרגול: " + fmtDur(s.ms));
+  lines.push("תרגילים: " + s.q);
+  lines.push("נכון: " + s.correct + " (" + Math.round(100 * s.correct / s.q) + "%)");
+  lines.push("הרצף הטוב ביותר: " + s.best);
+  var hard = hardest(5);
+  if(hard.length){
+    lines.push("");
+    lines.push("התרגילים הקשים:");
+    hard.forEach(function(h){
+      var p = parseKey(h.k);
+      lines.push("• " + p[0] + "÷" + p[1] + " — " + h.wrong + " טעויות");
+    });
+  } else {
+    lines.push("");
+    lines.push("בלי טעויות בכלל 🎉");
+  }
+  return lines.join("\n");
+}
+document.getElementById("btnReport").addEventListener("click", function(){
+  var t = reportText();
+  if(!t){
+    msg.className = "msg no";
+    msg.textContent = "קודם כמה תרגילים, ואז נשלח דוח";
+    return;
+  }
+  window.open("https://wa.me/?text=" + encodeURIComponent(t), "_blank");
+});
+document.getElementById("btnCopy").addEventListener("click", function(){
+  var t = reportText();
+  if(!t){
+    msg.className = "msg no";
+    msg.textContent = "קודם כמה תרגילים, ואז נשלח דוח";
+    return;
+  }
+  var done = function(){ msg.className = "msg ok"; msg.textContent = "הדוח הועתק — אפשר להדביק בוואטסאפ"; };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(done, function(){ window.prompt("העתיקי את הדוח:", t); });
+  } else { window.prompt("העתיקי את הדוח:", t); }
+});
+
+/* ---------------- parent view ---------------- */
+var scr = {
+  practice: document.getElementById("practice"),
+  pin: document.getElementById("pinScreen"),
+  parent: document.getElementById("parent")
+};
+function show(name){
+  for(var k in scr) scr[k].classList.add("hidden");
+  scr[name].classList.remove("hidden");
+}
+document.getElementById("btnParent").addEventListener("click", function(){
+  document.getElementById("pinInput").value = "";
+  document.getElementById("pinNote").textContent = "ארבע ספרות";
+  show("pin");
+  setTimeout(function(){ document.getElementById("pinInput").focus(); }, 60);
+});
+document.getElementById("btnPinBack").addEventListener("click", function(){ show("practice"); });
+document.getElementById("pinInput").addEventListener("input", function(e){
+  var v = e.target.value.replace(/\D/g, "").slice(0, 4);
+  e.target.value = v;
+  if(v.length === 4){
+    if(v === PIN){
+      cloudPull().then(function(){
+        buildParent();
+        show("parent");
+        save({ immediate: true });
+      });
+    } else {
+      document.getElementById("pinNote").textContent = "קוד לא נכון";
+      e.target.value = "";
+    }
+  }
+});
+document.getElementById("btnBack").addEventListener("click", function(){ show("practice"); nextQuestion(); });
+document.getElementById("btnReset").addEventListener("click", function(){
+  if(window.confirm("לאפס את כל נתוני החילוק של אמיליה? אין דרך לשחזר.")){
+    db = blank();
+    session = null;
+    streakNow = 0;
+    save({ immediate: true });
+    buildParent();
+  }
+});
+
+function levelName(n){
+  var names = {
+    1: "דו־ספרתי ÷ חד־ספרתי (בלי שארית)",
+    2: "דו־ספרתי ÷ חד־ספרתי (עם שארית)",
+    3: "תלת־ספרתי ÷ חד־ספרתי (בלי שארית)",
+    4: "תלת־ספרתי ÷ חד־ספרתי (עם שארית)",
+    5: "תלת־ספרתי ÷ דו־ספרתי (11–19)"
+  };
+  return names[n] || ("רמה " + n);
+}
+
+function buildParent(){
+  var host = document.getElementById("parentBody");
+  var real = db.sessions.filter(function(s){ return s.q > 0; });
+  var syncNote = cloudConfigured()
+    ? '<div class="note">סנכרון ענן: פעיל · מזהה ' + CLOUD.rowId + '</div>'
+    : '<div class="note">סנכרון ענן: לא מוגדר</div>';
+
+  if(!real.length){
+    host.innerHTML = '<div class="panel"><div class="empty">עדיין אין נתונים משותפים בענן.<br>אחרי שאמיליה תתרגל חילוק, יופיעו כאן הישיבות והתרגילים הקשים.</div>' + syncNote + '</div>';
+    return;
+  }
+  var tq = 0, tc = 0, tms = 0;
+  real.forEach(function(s){ tq += s.q; tc += s.correct; tms += s.ms; });
+
+  var h = '<div class="panel">';
+  h += '<h2>סך הכול</h2><table>';
+  h += '<tr><th>רמה נוכחית</th><td>' + db.level + ' — ' + levelName(db.level) + '</td></tr>';
+  h += '<tr><th>ישיבות תרגול</th><td>' + real.length + '</td></tr>';
+  h += '<tr><th>תרגילים</th><td>' + tq + '</td></tr>';
+  h += '<tr><th>אחוז הצלחה</th><td>' + Math.round(100 * tc / tq) + '%</td></tr>';
+  h += '<tr><th>זמן תרגול מצטבר</th><td>' + fmtDur(tms) + '</td></tr>';
+  h += '</table>' + syncNote + '</div>';
+
+  h += '<h3>ישיבות תרגול</h3><div class="panel"><table>';
+  h += '<tr><th>תאריך</th><th>שעה</th><th>זמן</th><th>תרגילים</th><th>הצלחה</th></tr>';
+  real.slice().reverse().slice(0, 25).forEach(function(s){
+    h += '<tr><td>' + fmtDate(s.start) + '</td><td>' + fmtTime(s.start) + '</td><td>' + fmtDur(s.ms) +
+         '</td><td>' + s.correct + '/' + s.q + '</td><td>' + Math.round(100 * s.correct / s.q) + '%</td></tr>';
+  });
+  h += '</table></div>';
+
+  var hard = hardest(8);
+  h += '<h3>התרגילים הקשים ביותר</h3><div class="panel">';
+  if(hard.length){
+    h += '<div class="hard">';
+    hard.forEach(function(x){
+      var p = parseKey(x.k);
+      h += '<span>' + p[0] + '÷' + p[1] + ' · ' + x.wrong + ' טעויות</span>';
+    });
+    h += '</div>';
+  } else {
+    h += '<div class="empty">אין תרגילים עם טעויות — הכול נכון עד כה.</div>';
+  }
+  h += '</div>';
+
+  host.innerHTML = h;
+}
+
+/* ---------------- go ---------------- */
+syncEl = document.getElementById("syncStatus");
+cloudPull().then(function(){
+  normalizeDb();
+  currentSession();
+  nextQuestion();
+});
+</script>
+
+
+</body></html>
